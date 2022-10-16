@@ -1,6 +1,9 @@
 package com.secondtech.sensortest;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Observer;
 
 import android.content.Context;
 import android.hardware.Sensor;
@@ -14,35 +17,18 @@ public class MainActivity extends AppCompatActivity {
     private SensorManager sensorManager;
     private Sensor accelerationSensor;
     private Sensor rotationSensor;
+    private AccelerationRepository accelerationRepository = new AccelerationRepository();
 
     private class AccelerationSensorListener implements SensorEventListener {
-        float cumulativeAcceleration[] = {0, 0, 0};
-        Long time = null;
-        @Override
-        public void onSensorChanged(SensorEvent sensorEvent) {
-            if(!rotationIsInitialized || time == null) {
-                time = System.nanoTime();
-                return;
-            }
-            float dt = getDt();
-            float[] acceleration = new float[3];
-            for(int n = 0; n < 3; n++)
-                acceleration[n] = sensorEvent.values[n];
-            acceleration = toGlobalCoordinateSystem(acceleration);
+        AccelerationRepository accelerationRepository;
 
-            for(int n = 0; n < sensorEvent.values.length; n++)
-                cumulativeAcceleration[n] += acceleration[n]*dt;
-            String values = "";
-            for(int n = 0; n < sensorEvent.values.length; n++)
-                values += " " + cumulativeAcceleration[n];
-            Log.d("onSensorChanged", values);
+        AccelerationSensorListener(AccelerationRepository accelerationRepository){
+            this.accelerationRepository = accelerationRepository;
         }
 
-        private float getDt() {
-            Long previousTime = time;
-            time = System.nanoTime();
-            float dt = (time - previousTime)*1e-9f;
-            return dt;
+        @Override
+        public void onSensorChanged(SensorEvent sensorEvent) {
+            accelerationRepository.setAcceleration(toGlobalCoordinateSystem(sensorEvent.values));
         }
 
         @Override
@@ -59,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
         return result;
     }
 
-    float rotation[] = {0, 0, 0, 0};
+    float rotation[] = {0, 0, 1, 0};
     boolean rotationIsInitialized = false;
     private class RotationSensorListener implements SensorEventListener {
         @Override
@@ -74,8 +60,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    AccelerationSensorListener accelerationSensorListener = new AccelerationSensorListener();
+    AccelerationSensorListener accelerationSensorListener = new AccelerationSensorListener(accelerationRepository);
     RotationSensorListener rotationSensorListener = new RotationSensorListener();
+    float cumulativeAcceleration[] = {0, 0, 0};
+    Long time = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,6 +72,21 @@ public class MainActivity extends AppCompatActivity {
         sensorManager = (SensorManager)getSystemService(Context.SENSOR_SERVICE);
         accelerationSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
         rotationSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
+        accelerationRepository.getData().observe(MainActivity.this, new Observer<float[]>(){
+
+            @Override
+            public void onChanged(float[] floats) {
+                Float dt = getDt();
+                if(dt == null)
+                    return;
+                for(int n = 0; n < accelerationRepository.getData().getValue().length; n++)
+                cumulativeAcceleration[n] += accelerationRepository.getData().getValue()[n]*dt;
+                String values = "";
+                for(int n = 0; n < accelerationRepository.getData().getValue().length; n++)
+                    values += " " + cumulativeAcceleration[n];
+                Log.d("onSensorChanged", values);
+            }
+        });
     }
 
     @Override
@@ -98,5 +101,16 @@ public class MainActivity extends AppCompatActivity {
         super.onPause();
         sensorManager.unregisterListener(accelerationSensorListener);
         sensorManager.unregisterListener(rotationSensorListener);
+    }
+
+    private Float getDt() {
+        if(time == null){
+            time = System.nanoTime();
+            return null;
+        }
+        Long previousTime = time;
+        time = System.nanoTime();
+        float dt = (time - previousTime)*1e-9f;
+        return dt;
     }
 }
