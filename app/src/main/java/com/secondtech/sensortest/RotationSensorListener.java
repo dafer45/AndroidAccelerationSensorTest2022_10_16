@@ -4,11 +4,13 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 
-class RotationSensorListener implements SensorEventListener {
-    private RotationRepository rotationRepository;
+import androidx.lifecycle.MutableLiveData;
 
-    public RotationSensorListener(RotationRepository rotationRepository) {
-        this.rotationRepository = rotationRepository;
+class RotationSensorListener implements SensorEventListener {
+    private MutableLiveData<float[]> rotation;
+
+    public RotationSensorListener(MutableLiveData<float[]> rotation) {
+        this.rotation = rotation;
     }
 
     @Override
@@ -16,7 +18,7 @@ class RotationSensorListener implements SensorEventListener {
         float rotation[] = new float[4];
         for (int n = 0; n < 4; n++)
             rotation[n] = sensorEvent.values[n];
-        rotationRepository.setRotation(rotation);
+        this.rotation.setValue(rotation);
     }
 
     @Override

@@ -4,16 +4,19 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 
-class AccelerationSensorListener implements SensorEventListener {
-    AccelerationRepository accelerationRepository;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 
-    AccelerationSensorListener(AccelerationRepository accelerationRepository) {
-        this.accelerationRepository = accelerationRepository;
+class AccelerationSensorListener implements SensorEventListener {
+    MutableLiveData<float[]> acceleration;
+
+    AccelerationSensorListener(MutableLiveData<float[]> acceleration) {
+        this.acceleration = acceleration;
     }
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
-        accelerationRepository.setAcceleration(sensorEvent.values);
+        acceleration.setValue(sensorEvent.values);
     }
 
     @Override
