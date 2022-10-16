@@ -5,8 +5,6 @@ import androidx.lifecycle.Observer;
 
 import android.content.Context;
 import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.Log;
@@ -16,32 +14,18 @@ public class MainActivity extends AppCompatActivity {
     private Sensor accelerationSensor;
     private Sensor rotationSensor;
     private AccelerationRepository accelerationRepository = new AccelerationRepository();
+    private RotationRepository rotationRepository = new RotationRepository();
 
     private float[] toGlobalCoordinateSystem(float[] v){
         Quaternion vQ = new Quaternion(v);
-        Quaternion rQ = new Quaternion(rotation);
+        Quaternion rQ = new Quaternion(rotationRepository.getData().getValue());
         Quaternion r = rQ.multiply(vQ).multiply(rQ.inverse());
         float result[] = {r.x, r.y, r.z};
         return result;
     }
 
-    float rotation[] = {0, 0, 1, 0};
-    boolean rotationIsInitialized = false;
-    private class RotationSensorListener implements SensorEventListener {
-        @Override
-        public void onSensorChanged(SensorEvent sensorEvent) {
-            for(int n = 0; n < 4; n++)
-                rotation[n] = sensorEvent.values[n];
-            rotationIsInitialized = true;
-        }
-
-        @Override
-        public void onAccuracyChanged(Sensor sensor, int i) {
-        }
-    }
-
     AccelerationSensorListener accelerationSensorListener = new AccelerationSensorListener(accelerationRepository);
-    RotationSensorListener rotationSensorListener = new RotationSensorListener();
+    RotationSensorListener rotationSensorListener = new RotationSensorListener(rotationRepository);
     float cumulativeAcceleration[] = {0, 0, 0};
     Long time = null;
 
