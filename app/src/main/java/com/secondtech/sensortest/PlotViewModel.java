@@ -28,7 +28,7 @@ public class PlotViewModel extends ViewModel {
                 String values = "";
                 for(int n = 0; n < acceleration.length; n++)
                     values += " " + cumulativeAcceleration[n];
-                Log.d("onSensorChanged", values);
+//                Log.d("onSensorChanged", values);
             }
         });
     }
