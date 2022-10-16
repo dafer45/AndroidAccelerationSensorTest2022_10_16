@@ -1,8 +1,6 @@
 package com.secondtech.sensortest;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
 
 import android.content.Context;
@@ -18,24 +16,6 @@ public class MainActivity extends AppCompatActivity {
     private Sensor accelerationSensor;
     private Sensor rotationSensor;
     private AccelerationRepository accelerationRepository = new AccelerationRepository();
-
-    private class AccelerationSensorListener implements SensorEventListener {
-        AccelerationRepository accelerationRepository;
-
-        AccelerationSensorListener(AccelerationRepository accelerationRepository){
-            this.accelerationRepository = accelerationRepository;
-        }
-
-        @Override
-        public void onSensorChanged(SensorEvent sensorEvent) {
-            accelerationRepository.setAcceleration(toGlobalCoordinateSystem(sensorEvent.values));
-        }
-
-        @Override
-        public void onAccuracyChanged(Sensor sensor, int i) {
-
-        }
-    }
 
     private float[] toGlobalCoordinateSystem(float[] v){
         Quaternion vQ = new Quaternion(v);
@@ -79,10 +59,11 @@ public class MainActivity extends AppCompatActivity {
                 Float dt = getDt();
                 if(dt == null)
                     return;
-                for(int n = 0; n < accelerationRepository.getData().getValue().length; n++)
-                cumulativeAcceleration[n] += accelerationRepository.getData().getValue()[n]*dt;
+                float[] acceleration = toGlobalCoordinateSystem(accelerationRepository.getData().getValue());
+                for(int n = 0; n < acceleration.length; n++)
+                cumulativeAcceleration[n] += acceleration[n]*dt;
                 String values = "";
-                for(int n = 0; n < accelerationRepository.getData().getValue().length; n++)
+                for(int n = 0; n < acceleration.length; n++)
                     values += " " + cumulativeAcceleration[n];
                 Log.d("onSensorChanged", values);
             }
