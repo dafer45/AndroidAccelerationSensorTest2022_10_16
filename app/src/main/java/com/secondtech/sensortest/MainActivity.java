@@ -2,6 +2,7 @@ package com.secondtech.sensortest;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
 
 import android.content.Context;
 import android.hardware.Sensor;
@@ -13,8 +14,9 @@ public class MainActivity extends AppCompatActivity {
     private SensorManager sensorManager;
     private Sensor accelerationSensor;
     private Sensor rotationSensor;
-    private AccelerationRepository accelerationRepository = new AccelerationRepository();
-    private RotationRepository rotationRepository = new RotationRepository();
+    private AccelerationRepository localAccelerationRepository;
+    private RotationRepository rotationRepository;
+    private AccelerationRepository globalAccelerationRepository;
 
     private float[] toGlobalCoordinateSystem(float[] v){
         Quaternion vQ = new Quaternion(v);
@@ -24,8 +26,8 @@ public class MainActivity extends AppCompatActivity {
         return result;
     }
 
-    AccelerationSensorListener accelerationSensorListener = new AccelerationSensorListener(accelerationRepository);
-    RotationSensorListener rotationSensorListener = new RotationSensorListener(rotationRepository);
+    AccelerationSensorListener accelerationSensorListener;
+    RotationSensorListener rotationSensorListener;
     float cumulativeAcceleration[] = {0, 0, 0};
     Long time = null;
 
@@ -36,14 +38,21 @@ public class MainActivity extends AppCompatActivity {
         sensorManager = (SensorManager)getSystemService(Context.SENSOR_SERVICE);
         accelerationSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
         rotationSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
-        accelerationRepository.getData().observe(MainActivity.this, new Observer<float[]>(){
+        PlotViewModel plotViewModel = new ViewModelProvider(this).get(PlotViewModel.class);
+        localAccelerationRepository = plotViewModel.getLocalAccelerationRepository();
+        globalAccelerationRepository = plotViewModel.getGlobalAccelerationRepository();
+        rotationRepository = plotViewModel.getRotationRepository();
+        accelerationSensorListener = new AccelerationSensorListener(localAccelerationRepository);
+        rotationSensorListener = new RotationSensorListener(rotationRepository);
 
+        localAccelerationRepository.getData().observe(MainActivity.this, new Observer<float[]>(){
             @Override
             public void onChanged(float[] floats) {
                 Float dt = getDt();
                 if(dt == null)
                     return;
-                float[] acceleration = toGlobalCoordinateSystem(accelerationRepository.getData().getValue());
+                float[] acceleration = toGlobalCoordinateSystem(localAccelerationRepository.getData().getValue());
+                globalAccelerationRepository.setAcceleration(acceleration);
                 for(int n = 0; n < acceleration.length; n++)
                 cumulativeAcceleration[n] += acceleration[n]*dt;
                 String values = "";
