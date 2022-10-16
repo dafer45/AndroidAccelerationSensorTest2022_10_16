@@ -7,10 +7,13 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModel;
 
+import java.util.LinkedList;
+
 public class PlotViewModel extends ViewModel {
     private AccelerationRepository localAccelerationRepository = new AccelerationRepository();
     private AccelerationRepository globalAccelerationRepository = new AccelerationRepository();
     private RotationRepository rotationRepository = new RotationRepository();
+    private AccelerationTimeSeriesRepository accelerationTimeSeriesRepository = new AccelerationTimeSeriesRepository();
 //    float cumulativeAcceleration[] = {0, 0, 0};
     Long time = null;
 
@@ -30,6 +33,12 @@ public class PlotViewModel extends ViewModel {
                     values += " " + cumulativeAcceleration[n];*/
             }
         });
+        globalAccelerationRepository.getData().observe(
+                mainActivity,
+                acceleration -> {
+                    accelerationTimeSeriesRepository.addAcceleration(acceleration);
+                }
+        );
     }
 
     private Vector3f toGlobalCoordinateSystem(Vector3f v){
@@ -56,6 +65,10 @@ public class PlotViewModel extends ViewModel {
 
     public LiveData<Vector3f> getGlobalAcceleration(){
         return globalAccelerationRepository.getData();
+    }
+
+    public LiveData<LinkedList<Vector3f>> getAccelerationTimeSeries(){
+        return accelerationTimeSeriesRepository.getAccelerationTimeSeries();
     }
 
     public MutableLiveData<float[]> getRotation(){

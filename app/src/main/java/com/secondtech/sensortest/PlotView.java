@@ -11,11 +11,11 @@ import androidx.annotation.Nullable;
 import androidx.lifecycle.LiveData;
 
 import java.util.LinkedList;
+import java.util.Vector;
 
 public class PlotView extends View {
-    private LiveData<Vector3f> acceleration;
     private int coordinateId;
-    private LinkedList<Float> timeseries = new LinkedList<Float>();
+    private LiveData<LinkedList<Vector3f>> timeSeries;
 
     public PlotView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
@@ -26,19 +26,21 @@ public class PlotView extends View {
         Paint background = new Paint();
         background.setColor(0xFFFFFFFF);
         canvas.drawRect(0, 0, getWidth(), getHeight(), background);
-        if(timeseries.size() != 0){
-            float min = timeseries.get(0);
-            float max = timeseries.get(0);
-            for(float value : timeseries){
+        LinkedList<Vector3f> data = timeSeries.getValue();
+        if(data.size() != 0){
+            float min = getValue(data.get(0));
+            float max = getValue(data.get(0));
+            for(Vector3f v : data){
+                float value = getValue(v);
                 if(min > value)
                     min = value;
                 if(max < value)
                     max = value;
             }
-            float dx = getWidth()/timeseries.size();
-            for(int n = 1; n < timeseries.size(); n++){
-                float previous = timeseries.get(n-1);
-                float current = timeseries.get(n);
+            float dx = getWidth()/data.size();
+            for(int n = 1; n < data.size(); n++){
+                float previous = getValue(data.get(n-1));
+                float current = getValue(data.get(n));
                 float previousX = dx*(n-1);
                 float previousY = getHeight()*(1 - (previous - min)/(max-min));
                 float currentX = dx*n;
@@ -54,23 +56,23 @@ public class PlotView extends View {
         }
     }
 
-    public void setData(MainActivity mainActivity, LiveData<Vector3f> acceleration, int coordinateId){
-        this.acceleration = acceleration;
+    private float getValue(Vector3f v){
+        switch(coordinateId){
+        case 0:
+            return v.x;
+        case 1:
+            return v.y;
+        case 2:
+            return v.z;
+        default:
+            throw new RuntimeException("Unknown coordinateId " + coordinateId);
+        }
+    }
+
+    public void setData(MainActivity mainActivity, LiveData<LinkedList<Vector3f>> timeSeries, int coordinateId){
+        this.timeSeries = timeSeries;
         this.coordinateId = coordinateId;
-        this.acceleration.observe(mainActivity, a -> {
-            switch(coordinateId){
-            case 0:
-                timeseries.add(acceleration.getValue().x);
-                break;
-            case 1:
-                timeseries.add(acceleration.getValue().y);
-                break;
-            case 2:
-                timeseries.add(acceleration.getValue().z);
-                break;
-            }
-            if(timeseries.size() > 1000)
-                timeseries.pop();
+        this.timeSeries.observe(mainActivity, dummy -> {
             postInvalidate();
         });
     }
