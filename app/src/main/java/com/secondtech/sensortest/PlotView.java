@@ -13,7 +13,7 @@ import androidx.lifecycle.LiveData;
 import java.util.LinkedList;
 
 public class PlotView extends View {
-    private LiveData<float[]> acceleration;
+    private LiveData<Vector3f> acceleration;
     private int coordinateId;
     private LinkedList<Float> timeseries = new LinkedList<Float>();
 
@@ -54,11 +54,21 @@ public class PlotView extends View {
         }
     }
 
-    public void setData(MainActivity mainActivity, LiveData<float[]> acceleration, int coordinateId){
+    public void setData(MainActivity mainActivity, LiveData<Vector3f> acceleration, int coordinateId){
         this.acceleration = acceleration;
         this.coordinateId = coordinateId;
         this.acceleration.observe(mainActivity, a -> {
-            timeseries.add(acceleration.getValue()[coordinateId]);
+            switch(coordinateId){
+            case 0:
+                timeseries.add(acceleration.getValue().x);
+                break;
+            case 1:
+                timeseries.add(acceleration.getValue().y);
+                break;
+            case 2:
+                timeseries.add(acceleration.getValue().z);
+                break;
+            }
             if(timeseries.size() > 1000)
                 timeseries.pop();
             postInvalidate();

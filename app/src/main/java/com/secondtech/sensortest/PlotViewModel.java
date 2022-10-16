@@ -11,34 +11,32 @@ public class PlotViewModel extends ViewModel {
     private AccelerationRepository localAccelerationRepository = new AccelerationRepository();
     private AccelerationRepository globalAccelerationRepository = new AccelerationRepository();
     private RotationRepository rotationRepository = new RotationRepository();
-    float cumulativeAcceleration[] = {0, 0, 0};
+//    float cumulativeAcceleration[] = {0, 0, 0};
     Long time = null;
 
     public void startListen(MainActivity mainActivity){
-        localAccelerationRepository.getData().observe(mainActivity, new Observer<float[]>(){
+        localAccelerationRepository.getData().observe(mainActivity, new Observer<Vector3f>(){
             @Override
-            public void onChanged(float[] floats) {
+            public void onChanged(Vector3f floats) {
                 Float dt = getDt();
                 if(dt == null)
                     return;
-                float[] acceleration = toGlobalCoordinateSystem(localAccelerationRepository.getData().getValue());
+                Vector3f acceleration = toGlobalCoordinateSystem(localAccelerationRepository.getData().getValue());
                 globalAccelerationRepository.setAcceleration(acceleration);
-                for(int n = 0; n < acceleration.length; n++)
+/*                for(int n = 0; n < acceleration.length; n++)
                     cumulativeAcceleration[n] += acceleration[n]*dt;
                 String values = "";
                 for(int n = 0; n < acceleration.length; n++)
-                    values += " " + cumulativeAcceleration[n];
-//                Log.d("onSensorChanged", values);
+                    values += " " + cumulativeAcceleration[n];*/
             }
         });
     }
 
-    private float[] toGlobalCoordinateSystem(float[] v){
-        Quaternion vQ = new Quaternion(v);
+    private Vector3f toGlobalCoordinateSystem(Vector3f v){
+        Quaternion vQ = new Quaternion(v.x, v.y, v.z, 0);
         Quaternion rQ = new Quaternion(rotationRepository.getData().getValue());
         Quaternion r = rQ.multiply(vQ).multiply(rQ.inverse());
-        float result[] = {r.x, r.y, r.z};
-        return result;
+        return new Vector3f(r.x, r.y, r.z);
     }
 
     private Float getDt() {
@@ -52,11 +50,11 @@ public class PlotViewModel extends ViewModel {
         return dt;
     }
 
-    public MutableLiveData<float[]> getLocalAcceleration(){
+    public MutableLiveData<Vector3f> getLocalAcceleration(){
         return localAccelerationRepository.getData();
     }
 
-    public LiveData<float[]> getGlobalAcceleration(){
+    public LiveData<Vector3f> getGlobalAcceleration(){
         return globalAccelerationRepository.getData();
     }
 
