@@ -13,9 +13,9 @@ import java.util.LinkedList;
 
 public class PlotView extends View {
     private int coordinateId;
-    private LiveData<LinkedList<Vector3f>> accelerationTimeSeries;
-    private LiveData<LinkedList<Vector3f>> velocityTimeSeries;
-    private LiveData<LinkedList<Vector3f>> positionTimeSeries;
+    private LiveData<LinkedList<Timestamped<Vector3f>>> accelerationTimeSeries;
+    private LiveData<LinkedList<Timestamped<Vector3f>>> velocityTimeSeries;
+    private LiveData<LinkedList<Timestamped<Vector3f>>> positionTimeSeries;
 
     public PlotView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
@@ -26,7 +26,7 @@ public class PlotView extends View {
         Paint background = new Paint();
         background.setColor(0xFFFFFFFF);
         canvas.drawRect(0, 0, getWidth(), getHeight(), background);
-        LinkedList<Vector3f> data = accelerationTimeSeries.getValue();
+        LinkedList<Timestamped<Vector3f>> data = accelerationTimeSeries.getValue();
         drawtimeSeries(canvas, data, new Paint());
         Paint paint = new Paint();
         paint.setColor(0xFFFF0000);
@@ -41,11 +41,11 @@ public class PlotView extends View {
         }
     }
 
-    private void drawtimeSeries(Canvas canvas, LinkedList<Vector3f> data, Paint paint) {
+    private void drawtimeSeries(Canvas canvas, LinkedList<Timestamped<Vector3f>> data, Paint paint) {
         if(data.size() != 0){
             float min = getValue(data.get(0));
             float max = getValue(data.get(0));
-            for(Vector3f v : data){
+            for(Timestamped<Vector3f> v : data){
                 float value = getValue(v);
                 if(min > value)
                     min = value;
@@ -71,14 +71,14 @@ public class PlotView extends View {
         }
     }
 
-    private float getValue(Vector3f v){
+    private float getValue(Timestamped<Vector3f> v){
         switch(coordinateId){
         case 0:
-            return v.x;
+            return v.data.x;
         case 1:
-            return v.y;
+            return v.data.y;
         case 2:
-            return v.z;
+            return v.data.z;
         default:
             throw new RuntimeException("Unknown coordinateId " + coordinateId);
         }
@@ -86,9 +86,9 @@ public class PlotView extends View {
 
     public void setData(
             MainActivity mainActivity,
-            LiveData<LinkedList<Vector3f>> accelerationTimeSeries,
-            LiveData<LinkedList<Vector3f>> velocityTimeSeries,
-            LiveData<LinkedList<Vector3f>> positionTimeSeries,
+            LiveData<LinkedList<Timestamped<Vector3f>>> accelerationTimeSeries,
+            LiveData<LinkedList<Timestamped<Vector3f>>> velocityTimeSeries,
+            LiveData<LinkedList<Timestamped<Vector3f>>> positionTimeSeries,
             int coordinateId
     ){
         this.accelerationTimeSeries = accelerationTimeSeries;

@@ -5,18 +5,18 @@ import androidx.lifecycle.MutableLiveData;
 import java.util.LinkedList;
 
 public class PositionTimeSeriesRepository {
-    MutableLiveData<LinkedList<Vector3f>> timeSeries = new MutableLiveData<LinkedList<Vector3f>>();
+    MutableLiveData<LinkedList<Timestamped<Vector3f>>> timeSeries = new MutableLiveData<LinkedList<Timestamped<Vector3f>>>();
 
     PositionTimeSeriesRepository(){
-        timeSeries.setValue(new LinkedList<Vector3f>());
+        timeSeries.setValue(new LinkedList<Timestamped<Vector3f>>());
     }
 
-    public MutableLiveData<LinkedList<Vector3f>> getPositionTimeSeries(){
+    public MutableLiveData<LinkedList<Timestamped<Vector3f>>> getPositionTimeSeries(){
         return timeSeries;
     }
 
-    public void addPosition(Vector3f position){
-        LinkedList<Vector3f> list = timeSeries.getValue();
+    public void addPosition(Timestamped<Vector3f> position){
+        LinkedList<Timestamped<Vector3f>> list = timeSeries.getValue();
         list.add(position);
         if(list.size() > 1000)
             list.pop();
