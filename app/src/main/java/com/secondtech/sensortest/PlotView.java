@@ -15,6 +15,7 @@ public class PlotView extends View {
     private int coordinateId;
     private LiveData<LinkedList<Vector3f>> accelerationTimeSeries;
     private LiveData<LinkedList<Vector3f>> velocityTimeSeries;
+    private LiveData<LinkedList<Vector3f>> positionTimeSeries;
 
     public PlotView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
@@ -30,6 +31,14 @@ public class PlotView extends View {
         Paint paint = new Paint();
         paint.setColor(0xFFFF0000);
         drawtimeSeries(canvas, velocityTimeSeries.getValue(), paint);
+        paint.setColor(0xFF0000FF);
+        drawtimeSeries(canvas, positionTimeSeries.getValue(), paint);
+        if(positionTimeSeries.getValue().size() != 0) {
+            Float value = getValue(positionTimeSeries.getValue().getLast());
+            Paint textPaint = new Paint();
+            textPaint.setTextSize(64);
+            canvas.drawText("" + value, getWidth() / 2, getHeight() / 2, textPaint);
+        }
     }
 
     private void drawtimeSeries(Canvas canvas, LinkedList<Vector3f> data, Paint paint) {
@@ -79,10 +88,12 @@ public class PlotView extends View {
             MainActivity mainActivity,
             LiveData<LinkedList<Vector3f>> accelerationTimeSeries,
             LiveData<LinkedList<Vector3f>> velocityTimeSeries,
+            LiveData<LinkedList<Vector3f>> positionTimeSeries,
             int coordinateId
     ){
         this.accelerationTimeSeries = accelerationTimeSeries;
         this.velocityTimeSeries = velocityTimeSeries;
+        this.positionTimeSeries = positionTimeSeries;
         this.coordinateId = coordinateId;
         this.velocityTimeSeries.observe(mainActivity, dummy -> {
             postInvalidate();
