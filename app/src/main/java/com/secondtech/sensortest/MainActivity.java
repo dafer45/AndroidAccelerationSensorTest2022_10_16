@@ -26,9 +26,9 @@ public class MainActivity extends AppCompatActivity {
         plotViewModel.startListen(this);
         accelerationSensorListener = new AccelerationSensorListener(plotViewModel.getLocalAcceleration());
         rotationSensorListener = new RotationSensorListener(plotViewModel.getRotation());
-        ((PlotView)findViewById(R.id.plotViewX)).setData(this, plotViewModel.getAccelerationTimeSeries(), 0);
-        ((PlotView)findViewById(R.id.plotViewY)).setData(this, plotViewModel.getAccelerationTimeSeries(), 1);
-        ((PlotView)findViewById(R.id.plotViewZ)).setData(this, plotViewModel.getAccelerationTimeSeries(), 2);
+        ((PlotView)findViewById(R.id.plotViewX)).setData(this, plotViewModel.getAccelerationTimeSeries(), plotViewModel.getVelocityTimeSeries(), 0);
+        ((PlotView)findViewById(R.id.plotViewY)).setData(this, plotViewModel.getAccelerationTimeSeries(), plotViewModel.getVelocityTimeSeries(), 1);
+        ((PlotView)findViewById(R.id.plotViewZ)).setData(this, plotViewModel.getAccelerationTimeSeries(), plotViewModel.getVelocityTimeSeries(), 2);
     }
 
     @Override

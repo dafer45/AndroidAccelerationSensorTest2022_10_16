@@ -14,29 +14,44 @@ public class PlotViewModel extends ViewModel {
     private AccelerationRepository globalAccelerationRepository = new AccelerationRepository();
     private RotationRepository rotationRepository = new RotationRepository();
     private AccelerationTimeSeriesRepository accelerationTimeSeriesRepository = new AccelerationTimeSeriesRepository();
-//    float cumulativeAcceleration[] = {0, 0, 0};
+    private VelocityTimeSeriesRepository velocityTimeSeriesRepository = new VelocityTimeSeriesRepository();
     Long time = null;
 
+    int counter = 0;
     public void startListen(MainActivity mainActivity){
         localAccelerationRepository.getData().observe(mainActivity, new Observer<Vector3f>(){
             @Override
             public void onChanged(Vector3f floats) {
-                Float dt = getDt();
-                if(dt == null)
-                    return;
                 Vector3f acceleration = toGlobalCoordinateSystem(localAccelerationRepository.getData().getValue());
                 globalAccelerationRepository.setAcceleration(acceleration);
-/*                for(int n = 0; n < acceleration.length; n++)
-                    cumulativeAcceleration[n] += acceleration[n]*dt;
-                String values = "";
-                for(int n = 0; n < acceleration.length; n++)
-                    values += " " + cumulativeAcceleration[n];*/
             }
         });
         globalAccelerationRepository.getData().observe(
                 mainActivity,
                 acceleration -> {
                     accelerationTimeSeriesRepository.addAcceleration(acceleration);
+                }
+        );
+        accelerationTimeSeriesRepository.getAccelerationTimeSeries().observe(
+                mainActivity,
+                accelerationTimeSeries -> {
+                    Vector3f v = new Vector3f(0, 0, 0);
+                    LinkedList<Vector3f> velocityTimeSeries = velocityTimeSeriesRepository.getVelocityTimeSeries().getValue();
+                    if(velocityTimeSeries.size() != 0){
+                        v = velocityTimeSeries.getLast();
+                    }
+                    Float dt = getDt();
+                    if(dt == null)
+                        return;
+                    Vector3f a = accelerationTimeSeries.getLast();
+                    Vector3f newV = new Vector3f(
+                            v.x + a.x*dt,
+                            v.y + a.y*dt,
+                            v.z + a.z*dt
+                    );
+                    velocityTimeSeriesRepository.addVelocity(newV);
+                    if(counter++%10 == 0)
+                        Log.d("Velocity", "" + newV.x + " " + newV.y + " " + newV.z);
                 }
         );
     }
@@ -69,6 +84,10 @@ public class PlotViewModel extends ViewModel {
 
     public LiveData<LinkedList<Vector3f>> getAccelerationTimeSeries(){
         return accelerationTimeSeriesRepository.getAccelerationTimeSeries();
+    }
+
+    public LiveData<LinkedList<Vector3f>> getVelocityTimeSeries(){
+        return velocityTimeSeriesRepository.getVelocityTimeSeries();
     }
 
     public MutableLiveData<float[]> getRotation(){

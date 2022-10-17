@@ -5,17 +5,16 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.util.AttributeSet;
 import android.view.View;
-import android.widget.Switch;
 
 import androidx.annotation.Nullable;
 import androidx.lifecycle.LiveData;
 
 import java.util.LinkedList;
-import java.util.Vector;
 
 public class PlotView extends View {
     private int coordinateId;
-    private LiveData<LinkedList<Vector3f>> timeSeries;
+    private LiveData<LinkedList<Vector3f>> accelerationTimeSeries;
+    private LiveData<LinkedList<Vector3f>> velocityTimeSeries;
 
     public PlotView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
@@ -26,7 +25,14 @@ public class PlotView extends View {
         Paint background = new Paint();
         background.setColor(0xFFFFFFFF);
         canvas.drawRect(0, 0, getWidth(), getHeight(), background);
-        LinkedList<Vector3f> data = timeSeries.getValue();
+        LinkedList<Vector3f> data = accelerationTimeSeries.getValue();
+        drawtimeSeries(canvas, data, new Paint());
+        Paint paint = new Paint();
+        paint.setColor(0xFFFF0000);
+        drawtimeSeries(canvas, velocityTimeSeries.getValue(), paint);
+    }
+
+    private void drawtimeSeries(Canvas canvas, LinkedList<Vector3f> data, Paint paint) {
         if(data.size() != 0){
             float min = getValue(data.get(0));
             float max = getValue(data.get(0));
@@ -37,7 +43,7 @@ public class PlotView extends View {
                 if(max < value)
                     max = value;
             }
-            float dx = getWidth()/data.size();
+            float dx = getWidth()/ data.size();
             for(int n = 1; n < data.size(); n++){
                 float previous = getValue(data.get(n-1));
                 float current = getValue(data.get(n));
@@ -50,7 +56,7 @@ public class PlotView extends View {
                         previousY,
                         currentX,
                         currentY,
-                        new Paint()
+                        paint
                 );
             }
         }
@@ -69,10 +75,16 @@ public class PlotView extends View {
         }
     }
 
-    public void setData(MainActivity mainActivity, LiveData<LinkedList<Vector3f>> timeSeries, int coordinateId){
-        this.timeSeries = timeSeries;
+    public void setData(
+            MainActivity mainActivity,
+            LiveData<LinkedList<Vector3f>> accelerationTimeSeries,
+            LiveData<LinkedList<Vector3f>> velocityTimeSeries,
+            int coordinateId
+    ){
+        this.accelerationTimeSeries = accelerationTimeSeries;
+        this.velocityTimeSeries = velocityTimeSeries;
         this.coordinateId = coordinateId;
-        this.timeSeries.observe(mainActivity, dummy -> {
+        this.velocityTimeSeries.observe(mainActivity, dummy -> {
             postInvalidate();
         });
     }
