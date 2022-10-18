@@ -16,8 +16,6 @@ public class PlotViewModel extends ViewModel {
     private AccelerationTimeSeriesRepository accelerationTimeSeriesRepository = new AccelerationTimeSeriesRepository();
     private VelocityTimeSeriesRepository velocityTimeSeriesRepository = new VelocityTimeSeriesRepository();
     private PositionTimeSeriesRepository positionTimeSeriesRepository = new PositionTimeSeriesRepository();
-    Long time = null;
-    Long time2 = null;
 
     int counter = 0;
     public void startListen(MainActivity mainActivity){
@@ -42,8 +40,8 @@ public class PlotViewModel extends ViewModel {
                     if(velocityTimeSeries.size() != 0){
                         v = velocityTimeSeries.getLast().data;
                     }
-                    Float dt = getDt();
-                    if(dt == null)
+                    Float dt = getDt(accelerationTimeSeries);
+                    if(accelerationTimeSeries.size() == 0)
                         return;
                     Vector3f a = accelerationTimeSeries.getLast().data;
                     Vector3f newV = new Vector3f(
@@ -52,8 +50,6 @@ public class PlotViewModel extends ViewModel {
                             v.z + a.z*dt
                     );
                     velocityTimeSeriesRepository.addVelocity(new Timestamped<Vector3f>(newV, accelerationTimeSeries.getLast().timestamp));
-                    if(counter++%10 == 0)
-                        Log.d("Velocity", "" + newV.x + " " + newV.y + " " + newV.z);
                 }
         );
         velocityTimeSeriesRepository.getVelocityTimeSeries().observe(
@@ -64,8 +60,8 @@ public class PlotViewModel extends ViewModel {
                     if(positionTimeSeries.size() != 0){
                         p = positionTimeSeries.getLast().data;
                     }
-                    Float dt = getDt2();
-                    if(dt == null)
+                    Float dt = getDt(velocityTimeSeries);
+                    if(velocityTimeSeries.size() == 0)
                         return;
                     Vector3f v = velocityTimeSeries.getLast().data;
                     Vector3f newP = new Vector3f(
@@ -85,26 +81,11 @@ public class PlotViewModel extends ViewModel {
         return new Timestamped<Vector3f>(new Vector3f(r.x, r.y, r.z), v.timestamp);
     }
 
-    private Float getDt() {
-        if(time == null){
-            time = System.nanoTime();
-            return null;
-        }
-        Long previousTime = time;
-        time = System.nanoTime();
-        float dt = (time - previousTime)*1e-9f;
-        return dt;
-    }
-
-    private Float getDt2() {
-        if(time2 == null){
-            time2 = System.nanoTime();
-            return null;
-        }
-        Long previousTime = time2;
-        time2 = System.nanoTime();
-        float dt = (time2 - previousTime)*1e-9f;
-        return dt;
+    private float getDt(LinkedList<Timestamped<Vector3f>> timeSeries){
+        if(timeSeries.size() < 2)
+            return 0;
+        else
+            return 1e-9f*(timeSeries.getLast().timestamp - timeSeries.get(timeSeries.size()-2).timestamp);
     }
 
     public MutableLiveData<Timestamped<Vector3f>> getLocalAcceleration(){

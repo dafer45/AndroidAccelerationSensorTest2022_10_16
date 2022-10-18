@@ -3,6 +3,7 @@ package com.secondtech.sensortest;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
+import android.util.Log;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -23,7 +24,7 @@ class AccelerationSensorListener implements SensorEventListener {
                                 sensorEvent.values[1],
                                 sensorEvent.values[2]
                         ),
-                        System.nanoTime()
+                        sensorEvent.timestamp
                 )
         );
     }
