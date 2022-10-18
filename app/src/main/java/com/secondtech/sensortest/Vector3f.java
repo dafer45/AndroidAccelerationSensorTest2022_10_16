@@ -18,4 +18,8 @@ public final class Vector3f {
         y = values[1];
         z = values[2];
     }
+
+    public float norm(){
+        return (float)Math.sqrt(x*x + y*y + z*z);
+    }
 }
